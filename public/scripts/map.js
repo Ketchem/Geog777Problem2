@@ -9,6 +9,7 @@ var locationOn = false;
 var locationMarker;
 var locationRadius;
 
+
 var findMyLocation = L.Control.extend({
  
     options: {
@@ -33,6 +34,18 @@ var trailStyle = {
     "opacity": 0.65
 };
 
+var parkingStyle = {
+    "color": "#9e9e9e",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var roadStyle = {
+    "color": "#c40606",
+    "weight": 5,
+    "opacity": 0.65
+};
+
 addTrails();
 addParkingLoop();
 addRoad();
@@ -50,18 +63,38 @@ function toggleLocation(){
 }
 
 function addTrails(){
-    $.ajax("data/BuffaloMtnTrails.geojson", {
+    // $.ajax("data/BuffaloMtnTrails.geojson", {
+    //     dataType: "json",
+    //     success: createTrailsLayer
+    // });
+    $.ajax("api/getTrails", {
         dataType: "json",
         success: createTrailsLayer
     });
 };
 
 function createTrailsLayer(response, status, jqXHRobject){
-    var trailsLayer = L.geoJSON(response, trailStyle).addTo(map);
+    // response.forEach(function(trail){
+    //     console.log(trail);
+    // });
+    var trails = {
+        type: "FeatureCollection",
+        name: "BuffaloMtnTrails",
+        features:response
+    };
+    // console.log (trails);
+    var trailsLayer = L.geoJSON(trails, {onEachFeature: onEachFeature, style: trailStyle}).addTo(map);
 
     trailsLayer.bringToFront(map);
-    // console.log("here");
+    // console.log(response);
 };
+
+function onEachFeature(feature, layer) {
+    // does this feature have a property named popupContent?
+    if (feature.properties && feature.properties.popupContent) {
+        layer.bindPopup(feature.properties.popupContent);
+    }
+}
 
 function addParkingLoop(){
     $.ajax("data/BuffaloMtnParking.geojson", {
@@ -71,7 +104,8 @@ function addParkingLoop(){
 };
 
 function createParkingLoopLayer(response, status, jqXHRobject){
-    var trailsLayer = L.geoJSON(response, trailStyle).addTo(map);
+    console.log(response);
+    var trailsLayer = L.geoJSON(response, parkingStyle).addTo(map);
 
     trailsLayer.bringToFront(map);
     // console.log("here");
@@ -85,7 +119,7 @@ function addRoad(){
 };
 
 function createRoadLayer(response, status, jqXHRobject){
-    var trailsLayer = L.geoJSON(response, trailStyle).addTo(map);
+    var trailsLayer = L.geoJSON(response, roadStyle).addTo(map);
 };
 
 function onLocationFound(e) {

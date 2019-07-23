@@ -1,6 +1,7 @@
 var express = require('express'),
     bodyParser = require('body-parser'), 
-    app = express();
+    app = express(), 
+    http = require('http');
 
 
 const { Pool, Client } = require('pg')
@@ -19,13 +20,50 @@ app.get("/", function(req, res){
 });
 
 app.get("/map", function(req, res){
+    res.render("map");
+});
+
+app.get("/reviews/:id", function(req, res){
+    res.render("reviews", {trailid:req.params.id});
+});
+
+app.get("/api/getReviews/:id", function(req, res){
+    // console.log(req.params.id);
+    queryString = "";
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(req.params.id));
+});
+
+app.get("/api/getTrails", function(req, res){
     pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
         if (err) {
           throw err
         }
         else {
-            // console.log(trails.rows)
-            res.render("map", {trails:trails.rows});
+            var sendData = [];
+            trails.rows.forEach(function(trail){
+                var reviewURL = "/reviews/" + trail.trailid.toString();
+                var popupContent = "<p>" + trail.name + "</p></br><a href='" + reviewURL + "'>Reviews</a>"
+                // console.log (popupContent);
+
+                var data = {
+                    type: "Feature",
+                    properties: {
+                        trailid: trail.trailid,
+                        name: trail.name,
+                        description: trail.description,
+                        length: trail.length,
+                        difficulty: trail.difficulty,
+                        type: trail.type,
+                        parkid: trail.parkid,
+                        popupContent: popupContent
+                    },
+                    geometry: JSON.parse(trail.geometry)
+                }
+                sendData.push(data);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(sendData));
         }
     });
 });
