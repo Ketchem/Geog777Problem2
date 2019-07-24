@@ -4,4 +4,12 @@
 <!-- <h1>Welcome to reviews page</h1> -->
 <h1>Reviews for trail Id: <%=trailid%></h1>
 
+<ul>
+    <% reviews.forEach(function(review){ %>
+        <li>Rating: <%=review.rating%> <%=review.comments%></li>
+    <% })%>
+</ul>
+
+<a href="/map">Back to Map</a>
+
 <!-- <% include partials/footer %> -->

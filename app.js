@@ -24,14 +24,34 @@ app.get("/map", function(req, res){
 });
 
 app.get("/reviews/:id", function(req, res){
-    res.render("reviews", {trailid:req.params.id});
+    queryString = "SELECT reviewid, rating, comments, userid, trailid FROM review WHERE trailid = '" + req.params.id + "'";
+
+    pool.query(queryString, (err, reviews)=> {
+        if (err) {
+            throw err
+          }
+          else {
+            // res.setHeader('Content-Type', 'application/json');
+            // res.end(JSON.stringify(reveiws.rows));
+            res.render("reviews", {trailid:req.params.id, reviews:reviews.rows});
+          }
+    });
+    
 });
 
 app.get("/api/getReviews/:id", function(req, res){
     // console.log(req.params.id);
-    queryString = "";
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(req.params.id));
+    queryString = "SELECT reviewid, rating, comments, userid, trailid FROM review WHERE trailid = '" + req.params.id + "'";
+
+    pool.query(queryString, (err, reviews)=> {
+        if (err) {
+            throw err
+          }
+          else {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(reveiws.rows));
+          }
+    });
 });
 
 app.get("/api/getTrails", function(req, res){
