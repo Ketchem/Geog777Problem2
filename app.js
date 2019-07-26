@@ -48,8 +48,12 @@ app.get("/api/getReviews/:id", function(req, res){
             throw err
           }
           else {
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(reveiws.rows));
+            // res.setHeader('Content-Type', 'application/json');
+            // res.end(JSON.stringify(reveiws.rows));
+            res.status(200)
+                .json(reviews.rows)
+                .end();
+            // res.render("reviews", {trailid:req.params.id, reviews:reviews.rows});
           }
     });
 });
@@ -63,7 +67,7 @@ app.get("/api/getTrails", function(req, res){
             var sendData = [];
             trails.rows.forEach(function(trail){
                 var reviewURL = "/reviews/" + trail.trailid.toString();
-                var popupContent = "<p>" + trail.name + "</p></br><a href='" + reviewURL + "'>Reviews</a>"
+                var trailReviews = "<p>" + trail.name + "</p></br><a href='" + reviewURL + "'>Reviews</a>"
                 // console.log (popupContent);
 
                 var data = {
@@ -76,7 +80,7 @@ app.get("/api/getTrails", function(req, res){
                         difficulty: trail.difficulty,
                         type: trail.type,
                         parkid: trail.parkid,
-                        popupContent: popupContent
+                        trailReviews: trailReviews
                     },
                     geometry: JSON.parse(trail.geometry)
                 }

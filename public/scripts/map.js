@@ -84,16 +84,43 @@ function createTrailsLayer(response, status, jqXHRobject){
     };
     // console.log (trails);
     var trailsLayer = L.geoJSON(trails, {onEachFeature: onEachFeature, style: trailStyle}).addTo(map);
-
+    
     trailsLayer.bringToFront(map);
     // console.log(response);
 };
 
 function onEachFeature(feature, layer) {
-    // does this feature have a property named popupContent?
-    if (feature.properties && feature.properties.popupContent) {
-        layer.bindPopup(feature.properties.popupContent);
+    // does this feature have a property named trailReviews
+    if (feature.properties && feature.properties.trailReviews) {
+        // layer.bindPopup(feature.properties.popupContent);
+        layer.on({
+            click: getReviews
+        });
+        // console.log(feature.properties.trailReviews);
+
     }
+}
+
+function getReviews(e){
+    var infoPanel = $("#info-panel").css("height", "35%")
+    var trailid = e.target.feature.properties.trailid;
+    $.ajax("api/getReviews/" + trailid, {
+        dataType: "json",
+        success: writeTrailReviews
+    });
+
+    function writeTrailReviews(response, status, jqXHRobject){
+        reviews = response;
+        reviewList = "";
+        reviews.forEach(function(review){
+            reviewList = reviewList + "<li>Rating: " + review.rating + " " + review.comments + "</li>";
+        });
+        var reviewHtml = "<h4>Reviews for Trail</h4><ul>" + reviewList + "</ul><a href='/map'>Back to Map</a> "
+        console.log(reviewHtml);
+        infoPanel.append(reviewHtml);
+    };
+    
+    // console.log(trailid);
 }
 
 function addParkingLoop(){
