@@ -110,14 +110,22 @@ function getReviews(e){
     });
 
     function writeTrailReviews(response, status, jqXHRobject){
+        infoPanel.empty();
         reviews = response;
+        var trailid;
         reviewList = "";
         reviews.forEach(function(review){
             reviewList = reviewList + "<li>Rating: " + review.rating + " " + review.comments + "</li>";
+            trailid = review.trailid;
         });
-        var reviewHtml = "<h4>Reviews for Trail</h4><ul>" + reviewList + "</ul><a href='/map'>Back to Map</a> "
-        console.log(reviewHtml);
+        console.log(trailid);
+        var reviewHtml = "<h4>Reviews for Trail</h4><a href='/addReview/"+ trailid + "'>Create New Review</a><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
+        // console.log(reviewHtml);
         infoPanel.append(reviewHtml);
+        $("#closePanel").on("click", function(){
+            infoPanel.empty();
+            infoPanel.css("height", "0%");
+        });
     };
     
     // console.log(trailid);
