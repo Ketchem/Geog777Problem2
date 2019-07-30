@@ -39,10 +39,10 @@ app.get("/reviews/:id", function(req, res){
     
 });
 
-app.get("/api/getReviews/:id", function(req, res){
+app.get("/api/reviews/:id", function(req, res){
     // console.log(req.params.id);
     queryString = "SELECT reviewid, rating, comments, userid, trailid FROM review WHERE trailid = '" + req.params.id + "'";
-
+    // console.log(req.query.param);
     pool.query(queryString, (err, reviews)=> {
         if (err) {
             throw err
@@ -58,7 +58,12 @@ app.get("/api/getReviews/:id", function(req, res){
     });
 });
 
-app.get("/api/getTrails", function(req, res){
+
+app.get("/create/review/:id", function(req, res){
+    res.render("createReview", {trailid:req.params.id});
+});
+
+app.get("/api/trails", function(req, res){
     pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
         if (err) {
           throw err
@@ -91,6 +96,16 @@ app.get("/api/getTrails", function(req, res){
         }
     });
 });
+
+// TODO: Encode values from form
+app.post("/create/review/:id", function(req, res){
+    var trailid = req.body.trailid;
+    var username = req.body.username;
+    var rating = req.body.rating;
+    var comments = req.body.comments;
+    res.send("Body Data: " + trailid + " " + username + " " + rating + " " + comments);
+});
+
 
 app.listen(3000, "localhost", function(){
     console.log("Buffalo Mountain server has started!");

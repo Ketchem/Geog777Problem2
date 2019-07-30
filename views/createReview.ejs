@@ -1,0 +1,52 @@
+<% include partials/landingHeader %> 
+<% include partials/navbar %>
+
+<h4 style="margin-top: 60px">Create a review for trail id: <%=trailid%></h4>
+
+<form id="createReviewForm" method="POST" >
+    <!-- <div class="form-group">
+      <label for="email">Email address:</label>
+      <input type="email" class="form-control" id="email">
+    </div> -->
+    <div class="form-group">
+            <label for="trialid">Trail Id:</label>
+            <input type="number" class="form-control" name="trailid" id = "trailid" readonly>
+    </div>
+
+    <div class="form-group">
+            <label for="username">Your User Name:</label>
+            <input type="text" class="form-control" name="username" required>
+    </div>
+
+    <!-- TODO: Change to stars -->
+    <div class="form-group">
+            <label for="rating">Your Rating:</label>
+            <input type="number" class="form-control" name="rating" min="1" max = "5" required>
+    </div>
+
+    <div class="form-group">
+            <label for="comments">Your Comments:</label>
+            <input type="text" class="form-control" name="comments" required>
+    </div>
+
+
+    <!-- <div class="form-group">
+      <label for="pwd">Password:</label>
+      <input type="password" class="form-control" id="pwd">
+    </div> -->
+    <!-- <div class="form-group form-check">
+      <label class="form-check-label">
+        <input class="form-check-input" type="checkbox"> Remember me
+      </label>
+    </div> -->
+    <button type="submit" class="btn btn-primary" id="createReviewButton">Create!</button>
+  </form>
+
+  <script>
+    var trailid = <%- JSON.stringify(trailid) %>;
+    var url = "/create/review/" + trailid;
+    $('#trailid').val(trailid);
+    $('#createReviewForm').attr('action', url);
+  </script>
+
+  <% include partials/footer %>

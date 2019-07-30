@@ -67,7 +67,7 @@ function addTrails(){
     //     dataType: "json",
     //     success: createTrailsLayer
     // });
-    $.ajax("api/getTrails", {
+    $.ajax("api/trails", {
         dataType: "json",
         success: createTrailsLayer
     });
@@ -104,7 +104,7 @@ function onEachFeature(feature, layer) {
 function getReviews(e){
     var infoPanel = $("#info-panel").css("height", "35%")
     var trailid = e.target.feature.properties.trailid;
-    $.ajax("api/getReviews/" + trailid, {
+    $.ajax("api/reviews/" + trailid, {
         dataType: "json",
         success: writeTrailReviews
     });
@@ -112,14 +112,13 @@ function getReviews(e){
     function writeTrailReviews(response, status, jqXHRobject){
         infoPanel.empty();
         reviews = response;
-        var trailid;
+        console.log(reviews);
         reviewList = "";
         reviews.forEach(function(review){
             reviewList = reviewList + "<li>Rating: " + review.rating + " " + review.comments + "</li>";
-            trailid = review.trailid;
         });
         console.log(trailid);
-        var reviewHtml = "<h4>Reviews for Trail</h4><a href='/addReview/"+ trailid + "'>Create New Review</a><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
+        var reviewHtml = "<h4>Reviews for Trail</h4><a href='/create/review/"+ trailid + "'>Create New Review</a><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
         // console.log(reviewHtml);
         infoPanel.append(reviewHtml);
         $("#closePanel").on("click", function(){
