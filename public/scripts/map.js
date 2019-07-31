@@ -9,6 +9,7 @@ var locationOn = false;
 var locationMarker;
 var locationRadius;
 var highlightedFeature;
+var trailsLayer;
 
 
 var findMyLocation = L.Control.extend({
@@ -25,7 +26,32 @@ var findMyLocation = L.Control.extend({
     }
 });
 
+var ratingFilter  = L.Control.extend({
+ 
+    options: {
+        position: 'topright' 
+    },
+ 
+    onAdd: function (map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom filter-rating');
+        // container.append('Filter By Rating: ');
+        container.innerHTML =   'Filter By Rating: <span id="rating1" class="far fa-star"></span>'+
+                                '<span id="rating2" class="far fa-star"></span>'+
+                                '<span id="rating3" class="far fa-star"></span>'+ 
+                                '<span id="rating4" class="far fa-star"></span>'+ 
+                                '<span id="rating5" class="far fa-star"></span>';
+        return container;
+    }
+});
+
 map.addControl(new findMyLocation());
+map.addControl(new ratingFilter());
+
+$('#rating1').click(function(){filterTrails(1)});
+$('#rating2').click(function(){filterTrails(2)});
+$('#rating3').click(function(){filterTrails(3)});
+$('#rating4').click(function(){filterTrails(4)});
+$('#rating5').click(function(){filterTrails(5)});
 
 locationButton = $(".location-button")[0];
 
@@ -74,7 +100,7 @@ function addTrails(){
     //     dataType: "json",
     //     success: createTrailsLayer
     // });
-    $.ajax("api/trails", {
+    $.ajax("api/trails/all", {
         dataType: "json",
         success: createTrailsLayer
     });
@@ -90,7 +116,7 @@ function createTrailsLayer(response, status, jqXHRobject){
         features:response
     };
     // console.log (trails);
-    var trailsLayer = L.geoJSON(trails, {onEachFeature: onEachFeature, style: trailStyle}).addTo(map);
+    trailsLayer = L.geoJSON(trails, {onEachFeature: onEachFeature, style: trailStyle}).addTo(map);
     
     trailsLayer.bringToFront(map);
     // console.log(response);
@@ -109,7 +135,8 @@ function onEachFeature(feature, layer) {
 }
 
 function getReviews(e){
-    // e.target.feature.setStyle(highlight);
+    console.log(e);
+    var trailName = e.target.feature.properties.name;
     if(typeof highlightedFeature !== 'undefined'){
         highlightedFeature.setStyle(trailStyle);
     }
@@ -155,9 +182,9 @@ function addParkingLoop(){
 
 function createParkingLoopLayer(response, status, jqXHRobject){
     console.log(response);
-    var trailsLayer = L.geoJSON(response, parkingStyle).addTo(map);
+    var parkingLayer = L.geoJSON(response, parkingStyle).addTo(map);
 
-    trailsLayer.bringToFront(map);
+    // trailsLayer.bringToFront(map);
     // console.log("here");
 };
 
@@ -169,7 +196,7 @@ function addRoad(){
 };
 
 function createRoadLayer(response, status, jqXHRobject){
-    var trailsLayer = L.geoJSON(response, roadStyle).addTo(map);
+    var roadsLayer = L.geoJSON(response, roadStyle).addTo(map);
 };
 
 function onLocationFound(e) {
@@ -193,3 +220,23 @@ function removeLocation(){
 //     var lng = coord.lng;
 //     console.log("You clicked the map at latitude: " + lat + " and longitude: " + lng);
 // });
+
+function filterTrails(rating){
+    $('.fas').addClass('far');
+    $('.fas').removeClass('fas');
+    for(var i = 1; i <= rating; i++){
+        $('#rating' + i).removeClass('far');
+        $('#rating' + i).addClass('fas');
+    }
+
+    // console.
+
+    map.removeLayer(trailsLayer);
+
+    var url = 'api/trails/?filterType=avgRating&filterValue=' + rating;
+
+    $.ajax(url, {
+        dataType: "json",
+        success: createTrailsLayer
+    });
+}

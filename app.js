@@ -110,8 +110,9 @@ app.get("/api/userid", function(req, res){
     }
 });
 
-app.get("/api/trails", function(req, res){
-    pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
+app.get("/api/trails/all", function(req, res){
+    // pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
+    pool.query('SELECT * FROM trailReveiwSummary', (err, trails) => {
         if (err) {
           throw err
         }
@@ -132,10 +133,59 @@ app.get("/api/trails", function(req, res){
                         difficulty: trail.difficulty,
                         type: trail.type,
                         parkid: trail.parkid,
-                        trailReviews: trailReviews
+                        trailReviews: trailReviews,
+                        rating: trail.rating,
+                        numreviews : trail.numreviews
                     },
-                    geometry: JSON.parse(trail.geometry)
+                    geometry: JSON.parse(trail.geom)
                 }
+                sendData.push(data);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(sendData));
+        }
+    });
+});
+
+app.get("/api/trails", function(req, res){
+    var filterType = req.query.filterType;
+    var filterValue = req.query.filterValue;
+
+    // console.log(filterType, filterValue);
+
+    if (filterType === 'avgRating'){
+        var queryString = "SELECT * FROM trailReveiwSummary WHERE RATING >= '" + req.query.filterValue + "'";
+        // console.log(queryString);
+    }
+    pool.query(queryString, (err, trails) => {
+        if (err) {
+          throw err
+        }
+        else {
+            // console.log(trails.rows)
+            var sendData = [];
+            trails.rows.forEach(function(trail){
+                var reviewURL = "/reviews/" + trail.trailid.toString();
+                var trailReviews = "<p>" + trail.name + "</p></br><a href='" + reviewURL + "'>Reviews</a>"
+                // console.log (popupContent);
+
+                var data = {
+                    type: "Feature",
+                    properties: {
+                        trailid: trail.trailid,
+                        name: trail.name,
+                        description: trail.description,
+                        length: trail.length,
+                        difficulty: trail.difficulty,
+                        type: trail.type,
+                        parkid: trail.parkid,
+                        trailReviews: trailReviews,
+                        rating: trail.rating,
+                        numreviews : trail.numreviews
+                    },
+                    geometry: JSON.parse(trail.geom)
+                }
+                // console.log(data);
                 sendData.push(data);
             });
             res.setHeader('Content-Type', 'application/json');
