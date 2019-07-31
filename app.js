@@ -11,7 +11,8 @@ const pool = new Pool({
       connectionString: connectionString,
     });
 
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(express.urlencoded({extended:false}));
+app.use(express.json());
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 
@@ -66,28 +67,36 @@ app.get("/create/review/:id", function(req, res){
 
 //Return userid by username or email (query string)
 app.get("/api/userid", function(req, res){
-    console.log("userid api " + req.query);
+    // console.log("userid api " + req.query);
     var username = req.query.username;
     var email = req.query.email;
 
-    console.log(username);
+    // console.log(username);
     if(typeof username !== 'undefined'){
         // console.log("Here");
         queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
         pool.query(queryString, (err, users)=> {
             if (err) {
-                throw err
+                // throw err
+                res.status(500);
+                res.end("An Error Occurred");
               }
             else {
-                sendData = {userid:users.rows[0].userid};
-                res.setHeader('Content-Type', 'application/json');
-                res.end(JSON.stringify(sendData));
+                if(users.rows.length > 0){
+                    sendData = {userid:users.rows[0].userid};
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(sendData));
+                }
+                else{
+                    res.status(204);
+                    res.send("User Not Found");
+                }
             }
         });
     }
     else if (typeof email !== 'undefined'){
         queryString = "SELECT userid FROM public.user WHERE email = '" + email + "'";
-        console.log(queryString);
+        // console.log(queryString);
         pool.query(queryString, (err, users)=> {
             if (err) {
                 throw err
@@ -137,13 +146,13 @@ app.get("/api/trails", function(req, res){
 
 // TODO: Check on encoded values
 app.post("/create/review/:id", function(req, res){
-    console.log(req.params);
-    console.log(req.body);
     var trailid = req.params.id;
     var username = req.body.username;
     var rating = req.body.rating;
     var comments = req.body.comments;
     var userid;
+
+    // console.log(trailid, username, rating, comments);
 
     //Search for username
     async function getUserId(){
@@ -174,18 +183,16 @@ app.post("/create/review/:id", function(req, res){
     };
 
     //if found post review with found userid
-    async function addReview(userid, rating, comments, userid, trailid){
+    async function addReview(userid, rating, comments, trailid){
         queryString = "INSERT INTO public.review(rating, comments, userid, trailid) VALUES ( '" + rating +"', '" + 
             comments + "', '" + userid + "', '" + trailid + "')";
         pool.query(queryString, (err, users)=> {
             if (err) {
                 throw err
-                }
-            else {
-                res.status = 302;
-                res.redirect('/map');
+                return false;
             }
         });
+        return true;
     };
 
     // queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
@@ -213,19 +220,32 @@ app.post("/create/review/:id", function(req, res){
     // });
 
     async function createReview(){
-        await getUserId().then(function(result){
-            console.log(result);
-        })
-        .catch(function(err){
-            console.log(err);
-        });
-        
-        // if (userid){
-        // }
+        var userid = await getUserId();
+        var trailAdded = false;
+
+        console.log(userid);
+        if (typeof userid !== 'undefined'){
+            userid = userid.userid;
+            trailAdded = await addReview(userid, rating, comments, trailid);
+        }
+        else {
+            console.log("User Not Found");
+        }
+
+        if (trailAdded){
+            res.status(201);
+            res.redirect('/map');
+        }
+        else{
+            res.status(501);
+            res.send("Something didn't work")
+        }
     }
 
     createReview();
     // res.send("Body Data: " + trailid + " " + username + " " + rating + " " + comments);
+    // res.status(204);
+    // res.end();
 });
 
 app.post("/create/user", function(req, res){
