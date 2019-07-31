@@ -1,7 +1,7 @@
-var express = require('express'),
+const express = require('express'),
     bodyParser = require('body-parser'), 
     app = express(), 
-    http = require('http');
+    request = require("request-promise");;
 
 
 const { Pool, Client } = require('pg')
@@ -14,6 +14,7 @@ const pool = new Pool({
 app.use(bodyParser.urlencoded({extended:true}));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
+
 
 app.get("/", function(req, res){
     res.render("landing");
@@ -63,6 +64,43 @@ app.get("/create/review/:id", function(req, res){
     res.render("createReview", {trailid:req.params.id});
 });
 
+//Return userid by username or email (query string)
+app.get("/api/userid", function(req, res){
+    console.log("userid api " + req.query);
+    var username = req.query.username;
+    var email = req.query.email;
+
+    console.log(username);
+    if(typeof username !== 'undefined'){
+        // console.log("Here");
+        queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
+        pool.query(queryString, (err, users)=> {
+            if (err) {
+                throw err
+              }
+            else {
+                sendData = {userid:users.rows[0].userid};
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(sendData));
+            }
+        });
+    }
+    else if (typeof email !== 'undefined'){
+        queryString = "SELECT userid FROM public.user WHERE email = '" + email + "'";
+        console.log(queryString);
+        pool.query(queryString, (err, users)=> {
+            if (err) {
+                throw err
+              }
+            else {
+                sendData = {userid:users.rows[0].userid};
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(sendData));
+            }
+        });
+    }
+});
+
 app.get("/api/trails", function(req, res){
     pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
         if (err) {
@@ -97,13 +135,134 @@ app.get("/api/trails", function(req, res){
     });
 });
 
-// TODO: Encode values from form
+// TODO: Check on encoded values
 app.post("/create/review/:id", function(req, res){
-    var trailid = req.body.trailid;
+    console.log(req.params);
+    console.log(req.body);
+    var trailid = req.params.id;
     var username = req.body.username;
     var rating = req.body.rating;
     var comments = req.body.comments;
-    res.send("Body Data: " + trailid + " " + username + " " + rating + " " + comments);
+    var userid;
+
+    //Search for username
+    async function getUserId(){
+        // url = "/api/userid"
+        // return await request(url, userid);
+
+        var options = {
+            uri: "http://localhost:3000/api/userid",
+            method: "GET",
+            qs: {
+                username : username
+            },
+            json: true
+        }
+        
+        try {
+            var result = await request(options);
+            return result;
+        } catch (err) {
+            console.error(err);
+        }
+
+    };
+
+    //if not found create user
+    async function createUser(){
+        return null;
+    };
+
+    //if found post review with found userid
+    async function addReview(userid, rating, comments, userid, trailid){
+        queryString = "INSERT INTO public.review(rating, comments, userid, trailid) VALUES ( '" + rating +"', '" + 
+            comments + "', '" + userid + "', '" + trailid + "')";
+        pool.query(queryString, (err, users)=> {
+            if (err) {
+                throw err
+                }
+            else {
+                res.status = 302;
+                res.redirect('/map');
+            }
+        });
+    };
+
+    // queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
+    // pool.query(queryString, (err, users)=> {
+    //     if (err) {
+    //         throw err
+    //       }
+    //     else if (users.rows.length >= 1){
+    //         var userid = users.rows[0].userid;
+    //         queryString = "INSERT INTO public.review(rating, comments, userid, trailid) VALUES ( '" + rating +"', '" + 
+    //             comments + "', '" + userid + "', '" + trailid + "')";
+    //         pool.query(queryString, (err, users)=> {
+    //             if (err) {
+    //                 throw err
+    //                 }
+    //             else {
+    //                 res.status = 302;
+    //                 res.redirect('/map');
+    //             }
+    //         });
+    //     }
+    //     else {
+    //         res.send("User Does Not Exist Try Again");
+    //     }
+    // });
+
+    async function createReview(){
+        await getUserId().then(function(result){
+            console.log(result);
+        })
+        .catch(function(err){
+            console.log(err);
+        });
+        
+        // if (userid){
+        // }
+    }
+
+    createReview();
+    // res.send("Body Data: " + trailid + " " + username + " " + rating + " " + comments);
+});
+
+app.post("/create/user", function(req, res){
+    var username = req.body.username;
+    var firstname = req.body.firstname;
+    var lastname = req.body.lastname;
+    var email = req.body.email;
+    var password = 'password'
+    var city = req.body.city;
+    var state = req.body.state;
+    var zip = req.body.zip;
+
+    var newUserId;
+    queryString = "INSERT INTO public.user(username)VALUES ('"+username+"')";
+    pool.query(queryString, (err, users)=> {
+        if (err) {
+            throw err
+            }
+        else{
+            queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
+            pool.query(queryString, (err, user)=> {
+                if (err) {
+                    throw err
+                    }
+                    else {
+                    // res.setHeader('Content-Type', 'application/json');
+                    // res.end(JSON.stringify(reveiws.rows));
+                    newUserId = user.rows[0].userid;
+                    // console.log(newUserId)
+                    // return newUserId;
+                    // res.render("reviews", {trailid:req.params.id, reviews:reviews.rows});
+                    }
+            });
+        }
+        // return newUserId;
+    });
+    res.send({"newUserId": newUserId});
 });
 
 
