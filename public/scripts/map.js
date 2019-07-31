@@ -157,8 +157,10 @@ function getReviews(e){
         reviews.forEach(function(review){
             reviewList = reviewList + "<li>Rating: " + review.rating + " " + review.comments + "</li>";
         });
-        console.log(trailid);
-        var reviewHtml = "<h4>Reviews for Trail</h4><a href='/create/review/"+ trailid + "'>Create New Review</a><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
+        // console.log(trailid);
+        // <button class='btn btn-primary' id='closePanel'>Close</button>
+        var reviewHtml = "<h4>Reviews - White Rock Loop</h4><ul>" + reviewList + "</ul><a id = 'createReview' class='btn btn-success' href='/create/review/"+ trailid + "'>Create New Review</a><button class='btn btn-primary' id='closePanel'>Close</button> "
+        // var reviewHtml = "<h4>White Rock Loop</h4><h5>Reviews <a href='/create/review/"+ trailid + "'>Create New Review</a></h5><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
         // console.log(reviewHtml);
         infoPanel.append(reviewHtml);
         $("#closePanel").on("click", function(){
