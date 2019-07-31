@@ -195,30 +195,6 @@ app.post("/create/review/:id", function(req, res){
         return true;
     };
 
-    // queryString = "SELECT userid FROM public.user WHERE username = '" + username + "'";
-    // pool.query(queryString, (err, users)=> {
-    //     if (err) {
-    //         throw err
-    //       }
-    //     else if (users.rows.length >= 1){
-    //         var userid = users.rows[0].userid;
-    //         queryString = "INSERT INTO public.review(rating, comments, userid, trailid) VALUES ( '" + rating +"', '" + 
-    //             comments + "', '" + userid + "', '" + trailid + "')";
-    //         pool.query(queryString, (err, users)=> {
-    //             if (err) {
-    //                 throw err
-    //                 }
-    //             else {
-    //                 res.status = 302;
-    //                 res.redirect('/map');
-    //             }
-    //         });
-    //     }
-    //     else {
-    //         res.send("User Does Not Exist Try Again");
-    //     }
-    // });
-
     async function createReview(){
         var userid = await getUserId();
         var trailAdded = false;

@@ -8,6 +8,7 @@ var locationButton;
 var locationOn = false;
 var locationMarker;
 var locationRadius;
+var highlightedFeature;
 
 
 var findMyLocation = L.Control.extend({
@@ -30,6 +31,12 @@ locationButton = $(".location-button")[0];
 
 var trailStyle = {
     "color": "#ff7800",
+    "weight": 5,
+    "opacity": 0.65
+};
+
+var highlight = {
+    "color": "#00691a",
     "weight": 5,
     "opacity": 0.65
 };
@@ -102,6 +109,12 @@ function onEachFeature(feature, layer) {
 }
 
 function getReviews(e){
+    // e.target.feature.setStyle(highlight);
+    if(typeof highlightedFeature !== 'undefined'){
+        highlightedFeature.setStyle(trailStyle);
+    }
+    highlightedFeature = e.target
+    highlightedFeature.setStyle(highlight);
     var infoPanel = $("#info-panel").css("height", "35%")
     var trailid = e.target.feature.properties.trailid;
     $.ajax("api/reviews/" + trailid, {
@@ -124,6 +137,9 @@ function getReviews(e){
         $("#closePanel").on("click", function(){
             infoPanel.empty();
             infoPanel.css("height", "0%");
+            if(typeof highlightedFeature !== 'undefined'){
+                highlightedFeature.setStyle(trailStyle);
+            }
         });
     };
     
