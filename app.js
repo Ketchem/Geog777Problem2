@@ -147,6 +147,40 @@ app.get("/api/trails/all", function(req, res){
     });
 });
 
+app.get("/api/poi/all", function(req, res){
+    // pool.query('SELECT trailid, name, description, length, difficulty, type, parkid, ST_AsGeoJSON(geom) as geometry FROM trail', (err, trails) => {
+    pool.query('SELECT poiid, name, description, parkid, trailid, ST_AsGeoJSON(geom) as geom FROM public.poi;', (err, pois) => {
+        if (err) {
+          throw err
+        }
+        else {
+            var sendData = [];
+            pois.rows.forEach(function(poi){
+                // var reviewURL = "/reviews/" + trail.trailid.toString();
+                // var trailReviews = "<p>" + trail.name + "</p></br><a href='" + reviewURL + "'>Reviews</a>"
+                var popupContent = "<p>POI Name: " + poi.name + "</p></br><p>Description: " + poi.description
+                // console.log (popupContent);
+
+                var data = {
+                    type: "Feature",
+                    properties: {
+                        poiid: poi.poiid, 
+                        name: poi.name,
+                        description: poi.description,
+                        trailid: poi.trailid,
+                        parkid: poi.parkid,
+                        popupContent: popupContent
+                    },
+                    geometry: JSON.parse(poi.geom)
+                }
+                sendData.push(data);
+            });
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(sendData));
+        }
+    });
+});
+
 app.get("/api/trails", function(req, res){
     var filterType = req.query.filterType;
     var filterValue = req.query.filterValue;
@@ -264,7 +298,7 @@ app.post("/create/review/:id", function(req, res){
         }
         else{
             res.status(501);
-            res.send("Something didn't work")
+            res.send("User Not Recognized <a href='http://localhost:3000/map'>Return to Map</a>")
         }
     }
 

@@ -10,6 +10,7 @@ var locationMarker;
 var locationRadius;
 var highlightedFeature;
 var trailsLayer;
+var poiLayer;
 
 
 var findMyLocation = L.Control.extend({
@@ -79,9 +80,26 @@ var roadStyle = {
     "opacity": 0.65
 };
 
+var parkBoundaryStyle = {
+    "color": "#299e64",
+    "weight": 10,
+    "fillOpacity": 0
+}
+
+var poistyle = {
+    // radius: 8,
+    // fillColor: "#ff7800",
+    // color: "#000",
+    // weight: 1,
+    // opacity: 1,
+    // fillOpacity: 0.8
+}
+
 addTrails();
 addParkingLoop();
 addRoad();
+addParkBoundary();
+addPois();
 
 function toggleLocation(){
     if (locationOn){
@@ -106,6 +124,17 @@ function addTrails(){
     });
 };
 
+function addPois(){
+    // $.ajax("data/BuffaloMtnTrails.geojson", {
+    //     dataType: "json",
+    //     success: createTrailsLayer
+    // });
+    $.ajax("api/poi/all", {
+        dataType: "json",
+        success: createPoiLayer
+    });
+};
+
 function createTrailsLayer(response, status, jqXHRobject){
     // response.forEach(function(trail){
     //     console.log(trail);
@@ -122,6 +151,22 @@ function createTrailsLayer(response, status, jqXHRobject){
     // console.log(response);
 };
 
+function createPoiLayer(response, status, jqXHRobject){
+    // response.forEach(function(trail){
+    //     console.log(trail);
+    // });
+    var pois = {
+        type: "FeatureCollection", 
+        name: "BuffaloMtnPois",
+        features:response
+    };
+    // console.log (trails);
+    poiLayer = L.geoJSON(pois, {onEachFeature: onEachPoiFeature, style: poistyle}).addTo(map);
+    
+    poiLayer.bringToFront(map);
+    // console.log(response);
+};
+
 function onEachFeature(feature, layer) {
     // does this feature have a property named trailReviews
     if (feature.properties && feature.properties.trailReviews) {
@@ -134,9 +179,24 @@ function onEachFeature(feature, layer) {
     }
 }
 
+
+
+function onEachPoiFeature(feature, layer) {
+    // does this feature have a property named trailReviews
+    if (feature.properties && feature.properties.popupContent) {
+        layer.bindPopup(feature.properties.popupContent);
+        // layer.on({
+        //     click: getReviews
+        // });
+        // console.log(feature.properties.trailReviews);
+
+    }
+}
+
 function getReviews(e){
-    console.log(e);
+    // console.log(e);
     var trailName = e.target.feature.properties.name;
+    // console.log(trailName);
     if(typeof highlightedFeature !== 'undefined'){
         highlightedFeature.setStyle(trailStyle);
     }
@@ -152,14 +212,14 @@ function getReviews(e){
     function writeTrailReviews(response, status, jqXHRobject){
         infoPanel.empty();
         reviews = response;
-        console.log(reviews);
+        // console.log(reviews);
         reviewList = "";
         reviews.forEach(function(review){
             reviewList = reviewList + "<li>Rating: " + review.rating + " " + review.comments + "</li>";
         });
         // console.log(trailid);
         // <button class='btn btn-primary' id='closePanel'>Close</button>
-        var reviewHtml = "<h4>Reviews - White Rock Loop</h4><ul>" + reviewList + "</ul><a id = 'createReview' class='btn btn-success' href='/create/review/"+ trailid + "'>Create New Review</a><button class='btn btn-primary' id='closePanel'>Close</button> "
+        var reviewHtml = "<h4>Reviews - "+trailName+"</h4><ul>" + reviewList + "</ul><a id = 'createReview' class='btn btn-success' href='/create/review/"+ trailid + "'>Create New Review</a><button class='btn btn-primary' id='closePanel'>Close</button> "
         // var reviewHtml = "<h4>White Rock Loop</h4><h5>Reviews <a href='/create/review/"+ trailid + "'>Create New Review</a></h5><ul>" + reviewList + "</ul><button class='btn btn-primary' id='closePanel'>Close</button> "
         // console.log(reviewHtml);
         infoPanel.append(reviewHtml);
@@ -182,13 +242,30 @@ function addParkingLoop(){
     });
 };
 
+function addParkBoundary(){
+    $.ajax("data/BuffaloMoutainParkBoundary.geojson", {
+        dataType: "json",
+        success: createParkBoundaryLayer
+    });
+};
+
+
 function createParkingLoopLayer(response, status, jqXHRobject){
-    console.log(response);
+    // console.log(response);
     var parkingLayer = L.geoJSON(response, parkingStyle).addTo(map);
 
     // trailsLayer.bringToFront(map);
     // console.log("here");
 };
+
+function createParkBoundaryLayer(response, status, jqXHRobject){
+    console.log(response);
+    var parkBoundaryLayer = L.geoJSON(response, parkBoundaryStyle).addTo(map);
+
+    // trailsLayer.bringToFront(map);
+    // console.log("here");
+};
+
 
 function addRoad(){
     $.ajax("data/BuffaloMtnRoad.geojson", {
